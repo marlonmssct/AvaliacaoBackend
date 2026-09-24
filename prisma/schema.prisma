@@ -77,7 +77,7 @@ model Event {
   createdAt       DateTime    @default(now()) @map("created_at")
   updatedAt       DateTime    @updatedAt @map("updated_at")
 
-  organizer User     @relation("OrganizerEvents", fields: [organizerId], references: [id], onDelete: Cascade)
+  organizer User     @relation("OrganizerEvents", fields: [organizerId], references: [id], onDelete: Restrict)
   sectors   Sector[]
 
   @@map("events")
@@ -125,7 +125,7 @@ model Purchase {
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
 
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Restrict)
   tickets Ticket[]
 
   @@map("purchases")
@@ -141,9 +141,9 @@ model Ticket {
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
 
-  batch    TicketBatch @relation(fields: [ticketBatchId], references: [id], onDelete: Cascade)
-  purchase Purchase    @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
-  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  batch    TicketBatch @relation(fields: [ticketBatchId], references: [id], onDelete: Restrict)
+  purchase Purchase    @relation(fields: [purchaseId], references: [id], onDelete: Restrict)
+  user     User        @relation(fields: [userId], references: [id], onDelete: Restrict)
   checkIn  CheckIn?
 
   @@map("tickets")
@@ -156,8 +156,8 @@ model CheckIn {
   checkedInAt        DateTime @default(now()) @map("checked_in_at")
   notes              String?
 
-  ticket      Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  checkedInBy User   @relation("OperatorCheckIns", fields: [checkedInByUserId], references: [id], onDelete: Cascade)
+  ticket      Ticket @relation(fields: [ticketId], references: [id], onDelete: Restrict)
+  checkedInBy User   @relation("OperatorCheckIns", fields: [checkedInByUserId], references: [id], onDelete: Restrict)
 
   @@map("check_ins")
 }

@@ -13,6 +13,7 @@ describe('PurchasesService (Regras de Compra, Estoque e Período)', () => {
   const mockPrisma = {
     ticketBatch: {
       findUnique: jest.fn(),
+      updateMany: jest.fn(),
       update: jest.fn(),
     },
     purchase: {
@@ -55,6 +56,7 @@ describe('PurchasesService (Regras de Compra, Estoque e Período)', () => {
     };
 
     prisma.ticketBatch.findUnique.mockResolvedValue(batch);
+    prisma.ticketBatch.updateMany.mockResolvedValue({ count: 1 });
     prisma.ticketBatch.update.mockResolvedValue({ ...batch, availableQuantity: 8 });
     prisma.purchase.create.mockResolvedValue({
       id: 1,

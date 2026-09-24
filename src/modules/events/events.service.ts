@@ -12,6 +12,7 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { UpdateEventStatusDto } from './dto/update-event-status.dto';
 import { Role } from '../../common/enums/role.enum';
 import { EventStatus } from '@prisma/client';
+import { canViewEvent } from '../../common/can-view-event';
 
 @Injectable()
 export class EventsService {
@@ -138,6 +139,14 @@ export class EventsService {
     return event;
   }
 
+  async findVisibleById(id: number, currentUser?: { id: number; role: Role }) {
+    const event = await this.findById(id);
+    if (!canViewEvent(event, currentUser)) {
+      throw new NotFoundException(`Evento com ID ${id} não encontrado.`);
+    }
+    return event;
+  }
+
   async update(
     id: number,
     updateEventDto: UpdateEventDto,
@@ -164,6 +173,11 @@ export class EventsService {
     const data: any = { ...updateEventDto };
     if (updateEventDto.startsAt) data.startsAt = new Date(updateEventDto.startsAt);
     if (updateEventDto.endsAt) data.endsAt = new Date(updateEventDto.endsAt);
+    if ((data.startsAt ?? event.startsAt) >= (data.endsAt ?? event.endsAt)) {
+      throw new BadRequestException(
+        'A data/hora de término do evento deve ser posterior à data/hora de início.',
+      );
+    }
 
     return this.prisma.event.update({
       where: { id },
@@ -191,8 +205,16 @@ export class EventsService {
 
     const targetStatus = updateStatusDto.status as unknown as EventStatus;
 
-    if (event.status === EventStatus.CANCELLED) {
-      throw new ConflictException('Eventos cancelados não podem ser reativados.');
+    const allowedTransitions: Record<EventStatus, EventStatus[]> = {
+      [EventStatus.DRAFT]: [EventStatus.PUBLISHED, EventStatus.CANCELLED],
+      [EventStatus.PUBLISHED]: [EventStatus.CANCELLED, EventStatus.FINISHED],
+      [EventStatus.CANCELLED]: [],
+      [EventStatus.FINISHED]: [],
+    };
+    if (!allowedTransitions[event.status].includes(targetStatus)) {
+      throw new ConflictException(
+        `Transição de ${event.status} para ${targetStatus} não permitida.`,
+      );
     }
 
     // Regra de transição: Para publicar, deve ter ao menos 1 setor e 1 lote
@@ -231,18 +253,24 @@ export class EventsService {
     bannerUrl: string,
     currentUser: { id: number; role: Role },
   ) {
-    const event = await this.findById(id);
-
-    if (event.organizerId !== currentUser.id && currentUser.role !== Role.ADMIN) {
-      throw new ForbiddenException(
-        'Você não tem permissão para atualizar a imagem de eventos de terceiros.',
-      );
-    }
+    await this.assertCanManageBanner(id, currentUser);
 
     return this.prisma.event.update({
       where: { id },
       data: { bannerUrl },
     });
+  }
+
+  async assertCanManageBanner(
+    id: number,
+    currentUser: { id: number; role: Role },
+  ) {
+    const event = await this.findById(id);
+    if (event.organizerId !== currentUser.id && currentUser.role !== Role.ADMIN) {
+      throw new ForbiddenException(
+        'Você não tem permissão para atualizar a imagem de eventos de terceiros.',
+      );
+    }
   }
 
   async remove(id: number, currentUser: { id: number; role: Role }) {

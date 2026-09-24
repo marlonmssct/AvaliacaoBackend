@@ -12,9 +12,10 @@ export class PrismaService
   private readonly pool: Pool;
 
   constructor() {
-    const connectionString =
-      process.env.DATABASE_URL ||
-      'postgresql://postgres:12345@localhost:5432/eventos_db?schema=public';
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+      throw new Error('Variável obrigatória ausente: DATABASE_URL');
+    }
     const pool = new Pool({ connectionString });
     const adapter = new PrismaPg(pool);
     super({ adapter });

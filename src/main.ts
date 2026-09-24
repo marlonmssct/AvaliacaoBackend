@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { join } from 'path';
+import { dirname, resolve } from 'path';
 import helmet from 'helmet';
 import * as compression from 'compression';
 
@@ -15,7 +15,7 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Servir arquivos estáticos de uploads
-  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+  app.useStaticAssets(dirname(resolve(process.env.UPLOAD_DEST || './uploads/banners')), {
     prefix: '/uploads/',
   });
 
@@ -60,7 +60,7 @@ async function bootstrap() {
     .setDescription(
       'API REST completa para gestão de eventos, setores, lotes, vendas de ingressos e check-in com RBAC.\n\n' +
       '🔐 **INSTRUÇÕES DE AUTORIZAÇÃO NO SWAGGER (Botão verde Authorize no topo)**:\n' +
-      '- **Passo 1 (API Key)**: No campo `x-api-key`, digite `12345` e clique em Authorize.\n' +
+      '- **Passo 1 (API Key)**: No campo `x-api-key`, digite o valor configurado em `API_KEY` e clique em Authorize.\n' +
       '- **Passo 2 (JWT)**: No campo `bearer`, cole o seu token (apenas o código `eyJ...`, sem a palavra "Bearer") e clique em Authorize.',
     )
     .setVersion('1.0.0')
@@ -80,7 +80,7 @@ async function bootstrap() {
         type: 'apiKey',
         name: 'x-api-key',
         in: 'header',
-        description: 'Chave de API obrigatória: 12345',
+        description: 'Chave de API configurada em API_KEY',
       },
       'x-api-key',
     )

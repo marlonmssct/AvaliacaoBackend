@@ -10,6 +10,7 @@ import { CreateTicketBatchDto } from './dto/create-ticket-batch.dto';
 import { UpdateTicketBatchDto } from './dto/update-ticket-batch.dto';
 import { Role } from '../../common/enums/role.enum';
 import { BatchStatus } from '@prisma/client';
+import { canViewEvent } from '../../common/can-view-event';
 
 @Injectable()
 export class TicketBatchesService {
@@ -90,6 +91,20 @@ export class TicketBatchesService {
     });
   }
 
+  async findVisibleBySectorId(
+    sectorId: number,
+    currentUser?: { id: number; role: Role },
+  ) {
+    const sector = await this.prisma.sector.findUnique({
+      where: { id: sectorId },
+      include: { event: true },
+    });
+    if (!sector || !canViewEvent(sector.event, currentUser)) {
+      throw new NotFoundException(`Setor com ID ${sectorId} não encontrado.`);
+    }
+    return this.findBySectorId(sectorId);
+  }
+
   async findById(id: number) {
     const batch = await this.prisma.ticketBatch.findUnique({
       where: { id },
@@ -106,6 +121,17 @@ export class TicketBatchesService {
       throw new NotFoundException(`Lote de ingressos com ID ${id} não encontrado.`);
     }
 
+    return batch;
+  }
+
+  async findVisibleById(
+    id: number,
+    currentUser?: { id: number; role: Role },
+  ) {
+    const batch = await this.findById(id);
+    if (!canViewEvent(batch.sector.event, currentUser)) {
+      throw new NotFoundException(`Lote de ingressos com ID ${id} não encontrado.`);
+    }
     return batch;
   }
 
@@ -129,7 +155,7 @@ export class TicketBatchesService {
     if (dto.startSaleDate) data.startSaleDate = new Date(dto.startSaleDate);
     if (dto.endSaleDate) data.endSaleDate = new Date(dto.endSaleDate);
 
-    if (data.startSaleDate && data.endSaleDate && data.endSaleDate <= data.startSaleDate) {
+    if ((data.endSaleDate ?? batch.endSaleDate) <= (data.startSaleDate ?? batch.startSaleDate)) {
       throw new BadRequestException(
         'A data de término das vendas deve ser posterior à data de início.',
       );

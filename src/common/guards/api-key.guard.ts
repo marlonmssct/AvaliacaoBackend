@@ -37,9 +37,7 @@ export class ApiKeyGuard implements CanActivate {
       request.query?.['apiKey'] ||
       request.query?.['x-api-key'];
 
-    const expectedApiKey = (
-      this.configService.get<string>('API_KEY') || '12345'
-    ).trim();
+    const expectedApiKey = this.configService.getOrThrow<string>('API_KEY').trim();
 
     const apiKey = typeof rawApiKey === 'string' ? rawApiKey.trim() : '';
 

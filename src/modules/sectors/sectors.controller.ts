@@ -20,6 +20,7 @@ import { SectorsService } from './sectors.service';
 import { CreateSectorDto } from './dto/create-sector.dto';
 import { UpdateSectorDto } from './dto/update-sector.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
@@ -47,22 +48,30 @@ export class SectorsController {
   }
 
   @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Get('event/:eventId')
   @ApiOperation({ summary: 'Listar setores de um evento' })
   @ApiParam({ name: 'eventId', description: 'ID numérico do evento' })
   @ApiResponse({ status: 200, description: 'Lista de setores do evento' })
-  findByEventId(@Param('eventId', ParseIntPipe) eventId: number) {
-    return this.sectorsService.findByEventId(eventId);
+  findByEventId(
+    @Param('eventId', ParseIntPipe) eventId: number,
+    @CurrentUser() user?: CurrentUserPayload,
+  ) {
+    return this.sectorsService.findVisibleByEventId(eventId, user);
   }
 
   @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Get(':id')
   @ApiOperation({ summary: 'Obter detalhes de um setor' })
   @ApiParam({ name: 'id', description: 'ID numérico do setor' })
   @ApiResponse({ status: 200, description: 'Detalhes do setor' })
   @ApiResponse({ status: 404, description: 'Setor não encontrado' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.sectorsService.findById(id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user?: CurrentUserPayload,
+  ) {
+    return this.sectorsService.findVisibleById(id, user);
   }
 
   @ApiBearerAuth()

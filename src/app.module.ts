@@ -19,7 +19,15 @@ import { ApiKeyGuard } from './common/guards/api-key.guard';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env', '.env.example'],
+      envFilePath: '.env',
+      validate: (config) => {
+        for (const name of ['DATABASE_URL', 'JWT_SECRET', 'API_KEY']) {
+          if (!config[name] || !String(config[name]).trim()) {
+            throw new Error(`Variável obrigatória ausente: ${name}`);
+          }
+        }
+        return config;
+      },
     }),
     DatabaseModule,
     AuthModule,

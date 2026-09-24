@@ -8,6 +8,8 @@ import { Role } from '../src/common/enums/role.enum';
 import { BatchStatus, EventStatus, PaymentMethod, PurchaseStatus, TicketStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
+import { unlink } from 'fs/promises';
+import { join } from 'path';
 
 describe('Testes E2E Completos (10 Cenários Obrigatórios + API Key)', () => {
   let app: INestApplication;
@@ -18,7 +20,7 @@ describe('Testes E2E Completos (10 Cenários Obrigatórios + API Key)', () => {
   let organizer2Token: string;
   let customerToken: string;
 
-  const validApiKey = '12345';
+  const validApiKey = process.env.API_KEY!;
 
   const adminUserId = 1;
   const orgUserId = 2;
@@ -165,6 +167,7 @@ describe('Testes E2E Completos (10 Cenários Obrigatórios + API Key)', () => {
           return null;
         }),
         update: jest.fn(async ({ where, data }) => ({ id: where.id, ...data })),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
       purchase: {
         create: jest.fn(async ({ data }) => ({
@@ -240,7 +243,7 @@ describe('Testes E2E Completos (10 Cenários Obrigatórios + API Key)', () => {
 
     await app.init();
 
-    // Obter tokens JWT para cada perfil (enviando a API Key x-api-key: 12345)
+    // Obter tokens JWT para cada perfil usando a API Key do ambiente.
     const orgLogin = await request(app.getHttpServer())
       .post('/auth/login')
       .set('x-api-key', validApiKey)
@@ -455,7 +458,7 @@ describe('Testes E2E Completos (10 Cenários Obrigatórios + API Key)', () => {
 
   it('8b. UPLOAD: Upload de imagem válida deve ser aceito e atualizar o banner', async () => {
     const fakeImageBuffer = Buffer.from(
-      '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=',
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/L1sAAAAASUVORK5CYII=',
       'base64',
     );
 
@@ -464,11 +467,17 @@ describe('Testes E2E Completos (10 Cenários Obrigatórios + API Key)', () => {
       .set('x-api-key', validApiKey)
       .set('Authorization', `Bearer ${organizerToken}`)
       .attach('file', fakeImageBuffer, {
-        filename: 'banner.jpeg',
-        contentType: 'image/jpeg',
+        filename: 'banner.png',
+        contentType: 'image/png',
       });
 
-    expect(res.status).toBe(200);
+    try {
+      expect(res.status).toBe(200);
+    } finally {
+      if (res.body?.bannerUrl) {
+        await unlink(join(process.cwd(), res.body.bannerUrl)).catch(() => undefined);
+      }
+    }
   });
 
   // Cenário 9: Integração externa com HttpService
@@ -490,6 +499,6 @@ describe('Testes E2E Completos (10 Cenários Obrigatórios + API Key)', () => {
         status: 'PUBLISHED',
       });
     expect(res.status).toBe(409);
-    expect(res.body.message).toContain('setor');
+    expect(res.body.message).toContain('Transição');
   });
 });

@@ -12,7 +12,6 @@ import {
   UploadedFile,
   ParseFilePipe,
   MaxFileSizeValidator,
-  FileTypeValidator,
   BadRequestException,
   HttpCode,
   HttpStatus,
@@ -27,14 +26,15 @@ import {
   ApiConsumes,
   ApiBody,
 } from '@nestjs/swagger';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { basename, extname, join, resolve } from 'path';
 import { randomUUID } from 'crypto';
+import { mkdir, unlink, writeFile } from 'fs/promises';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { UpdateEventStatusDto } from './dto/update-event-status.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
@@ -62,6 +62,7 @@ export class EventsController {
   }
 
   @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Get()
   @ApiOperation({ summary: 'Listar eventos públicos e visíveis' })
   @ApiResponse({ status: 200, description: 'Lista de eventos retornada' })
@@ -70,13 +71,17 @@ export class EventsController {
   }
 
   @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Get(':id')
   @ApiOperation({ summary: 'Obter detalhes de um evento por ID' })
   @ApiParam({ name: 'id', description: 'ID numérico do evento' })
   @ApiResponse({ status: 200, description: 'Detalhes completos do evento e seus setores' })
   @ApiResponse({ status: 404, description: 'Evento não encontrado' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.eventsService.findById(id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user?: CurrentUserPayload,
+  ) {
+    return this.eventsService.findVisibleById(id, user);
   }
 
   @ApiBearerAuth()
@@ -121,13 +126,6 @@ export class EventsController {
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads/banners',
-        filename: (req, file, cb) => {
-          const uniqueSuffix = `${randomUUID()}${extname(file.originalname)}`;
-          cb(null, uniqueSuffix);
-        },
-      }),
       limits: {
         fileSize: 5 * 1024 * 1024, // 5MB
       },
@@ -155,10 +153,6 @@ export class EventsController {
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
-          new FileTypeValidator({
-            fileType: /(jpeg|png|webp)/i,
-            skipMagicNumbersValidation: true,
-          } as any),
         ],
       }),
     )
@@ -169,8 +163,46 @@ export class EventsController {
       throw new BadRequestException('Nenhum arquivo enviado');
     }
 
-    const bannerUrl = `/uploads/banners/${file.filename}`;
-    return this.eventsService.updateBanner(id, bannerUrl, user);
+    const acceptedTypes: Record<string, string[]> = {
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/webp': ['.webp'],
+    };
+    const extension = extname(file.originalname).toLowerCase();
+    const bytes = file.buffer;
+    const detectedType =
+      bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+        ? 'image/png'
+        : bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff
+          ? 'image/jpeg'
+          : bytes.toString('ascii', 0, 4) === 'RIFF' &&
+              bytes.toString('ascii', 8, 12) === 'WEBP'
+            ? 'image/webp'
+            : null;
+    if (
+      !acceptedTypes[file.mimetype]?.includes(extension) ||
+      detectedType !== file.mimetype ||
+      file.size === 0
+    ) {
+      throw new BadRequestException('Tipo ou extensão da imagem inválidos.');
+    }
+
+    await this.eventsService.assertCanManageBanner(id, user);
+    const filename = `${randomUUID()}${extension}`;
+    const destination = resolve(process.env.UPLOAD_DEST || './uploads/banners');
+    const filepath = join(destination, filename);
+    await mkdir(destination, { recursive: true });
+    await writeFile(filepath, file.buffer);
+    try {
+      return await this.eventsService.updateBanner(
+        id,
+        `/uploads/${basename(destination)}/${filename}`,
+        user,
+      );
+    } catch (error) {
+      await unlink(filepath);
+      throw error;
+    }
   }
 
   @ApiBearerAuth()

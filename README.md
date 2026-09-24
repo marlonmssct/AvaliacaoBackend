@@ -24,7 +24,7 @@ Backend profissional e escalável desenvolvido em **NestJS** e **TypeScript** co
 
 - **Framework**: [NestJS](https://nestjs.com/) v10+ (Node.js runtime v24)
 - **Linguagem**: [TypeScript](https://www.typescriptlang.org/)
-- **ORM**: [Prisma](https://www.prisma.io/) v5 / Driver Relacional PostgreSQL
+- **ORM**: [Prisma](https://www.prisma.io/) v7.10.0 com `@prisma/adapter-pg`
 - **Banco de Dados**: PostgreSQL 16
 - **Autenticação**: Passport JWT, Bcrypt
 - **Validação de Dados**: Class-Validator, Class-Transformer
@@ -78,7 +78,7 @@ A plataforma possui três perfis de usuário com restrições explícitas:
 
 | Recurso / Ação | CUSTOMER | ORGANIZER | ADMIN |
 |---|:---:|:---:|:---:|
-| Registro / Login | ✅ | ✅ | ✅ |
+| Registro público / Login | ✅ / ✅ | ✅ / ✅ | ❌ / ✅ |
 | Consultar Eventos Públicos | ✅ | ✅ | ✅ |
 | Criar Eventos e Gerenciar Setores/Lotes | ❌ | ✅ (Apenas próprios) | ✅ (Todos) |
 | Upload de Banner do Evento | ❌ | ✅ (Apenas próprios) | ✅ (Todos) |
@@ -98,7 +98,7 @@ A plataforma possui três perfis de usuário com restrições explícitas:
 2. **Venda Somente no Período de Vigência**:
    - Ingressos só podem ser comprados se o evento estiver publicado (`PUBLISHED`), o lote estiver ativo (`ACTIVE`) e o momento da compra estiver estritamente entre `startSaleDate` e `endSaleDate`. Fora disso, retorna `409 Conflict`.
 3. **Controle Atômico de Estoque**:
-   - A compra desconta atomicamente o saldo disponível do lote através de transação com `$transaction`. Caso o saldo se esgote concorrentemente, a operação é revertida e responde `409 Conflict`.
+   - A compra reserva o saldo por atualização condicional dentro de `$transaction`. Se outra compra consumir o último ingresso, a operação responde `409 Conflict`.
 4. **Check-in Único**:
    - Cada ingresso possui status `VALID`. Ao realizar a entrada, o status é alterado para `USED` e o registro de auditoria é gravado com data, hora e operador. Qualquer tentativa subsequente de reutilização é rejeitada com `409 Conflict`.
 5. **Transições de Estado do Evento**:
@@ -174,6 +174,8 @@ Copie o arquivo de exemplo e ajuste as variáveis caso necessário:
 cp .env.example .env
 ```
 
+Defina `DATABASE_URL`, `JWT_SECRET` e `API_KEY` no `.env` antes de iniciar. Os dois segredos estão vazios no exemplo por segurança; gere valores aleatórios exclusivos para o seu ambiente. Em PowerShell, use `Copy-Item .env.example .env` para copiar o arquivo. A aplicação falha na inicialização se uma dessas variáveis estiver ausente.
+
 ### 3. Subir o Banco de Dados (Docker - Opcional)
 ```bash
 docker compose up -d
@@ -184,9 +186,12 @@ docker compose up -d
 # Executa migrações do Prisma
 npx prisma migrate deploy
 
-# Popula o banco com usuários e eventos de teste
+# Opcional: popula o banco com usuários e eventos de demonstração.
+# Atenção: o seed remove os dados atuais antes de inserir os exemplos.
 npm run seed
 ```
+
+Esta migration inicial foi corrigida para IDs inteiros e exclusões que preservam compras/ingressos. Para um banco novo, use `migrate deploy`. Se outro ambiente já aplicou a versão antiga da migration, faça backup e planeje a conversão dos IDs e o histórico de migrations antes de atualizar; não reaplique a migration inicial sobre dados existentes. Bancos de desenvolvimento criados com `prisma db push` precisam ser comparados ao schema antes de registrar a migration como baseline.
 
 ### 5. Executar a Aplicação
 ```bash
@@ -356,7 +361,7 @@ curl -X POST http://localhost:3000/check-ins \
 
 ## 🧪 Testes Automatizados
 
-A aplicação inclui testes unitários e de integração de ponta a ponta validando os 10 cenários obrigatórios:
+A aplicação inclui testes unitários e testes HTTP com Prisma mockado. Eles validam rotas e regras isoladas, mas não substituem uma verificação com PostgreSQL real para migrations e concorrência:
 
 ```bash
 # Executar todos os testes
@@ -364,5 +369,11 @@ npm test
 
 # Executar com relatório de cobertura
 npm run test:cov
+
+# Testes HTTP com Prisma mockado
+npm run test:e2e
+
+# Integração real: requer PostgreSQL e permissão para criar banco descartável
+npm run test:db
 ```
 # AvaliacaoBackend

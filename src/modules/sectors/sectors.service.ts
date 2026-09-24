@@ -8,6 +8,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { CreateSectorDto } from './dto/create-sector.dto';
 import { UpdateSectorDto } from './dto/update-sector.dto';
 import { Role } from '../../common/enums/role.enum';
+import { canViewEvent } from '../../common/can-view-event';
 
 @Injectable()
 export class SectorsService {
@@ -52,6 +53,17 @@ export class SectorsService {
     });
   }
 
+  async findVisibleByEventId(
+    eventId: number,
+    currentUser?: { id: number; role: Role },
+  ) {
+    const event = await this.prisma.event.findUnique({ where: { id: eventId } });
+    if (!event || !canViewEvent(event, currentUser)) {
+      throw new NotFoundException(`Evento com ID ${eventId} não encontrado.`);
+    }
+    return this.findByEventId(eventId);
+  }
+
   async findById(id: number) {
     const sector = await this.prisma.sector.findUnique({
       where: { id },
@@ -65,6 +77,17 @@ export class SectorsService {
       throw new NotFoundException(`Setor com ID ${id} não encontrado.`);
     }
 
+    return sector;
+  }
+
+  async findVisibleById(
+    id: number,
+    currentUser?: { id: number; role: Role },
+  ) {
+    const sector = await this.findById(id);
+    if (!canViewEvent(sector.event, currentUser)) {
+      throw new NotFoundException(`Setor com ID ${id} não encontrado.`);
+    }
     return sector;
   }
 

@@ -2,12 +2,14 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { Role } from '../../common/enums/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +19,9 @@ export class AuthService {
   ) { }
 
   async register(registerDto: RegisterDto) {
+    if (registerDto.role === Role.ADMIN) {
+      throw new BadRequestException('O cadastro público não permite o perfil ADMIN.');
+    }
     const user = await this.usersService.create(registerDto);
     const token = this.generateToken(user);
     return {

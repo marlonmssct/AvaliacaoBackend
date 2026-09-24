@@ -10,15 +10,20 @@ import {
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
+import 'dotenv/config';
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  'postgresql://postgres:12345@localhost:5432/eventos_db?schema=public';
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error('Variável obrigatória ausente: DATABASE_URL');
+}
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('O seed de demonstração não pode ser executado em produção.');
+  }
   console.log('🌱 [SEED] Limpando dados anteriores...');
 
   // Limpa tabelas na ordem correta de integridade referencial

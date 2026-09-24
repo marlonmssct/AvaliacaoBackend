@@ -19,7 +19,7 @@ describe('Suíte Completa de Rotas - Testes de Sucesso (200/201) e Erros (400, 4
   let app: INestApplication;
   let mockPrisma: any;
 
-  const validApiKey = '12345';
+  const validApiKey = process.env.API_KEY!;
   let adminToken: string;
   let org1Token: string;
   let org2Token: string;
@@ -233,6 +233,7 @@ describe('Suíte Completa de Rotas - Testes de Sucesso (200/201) e Erros (400, 4
         }),
         findMany: jest.fn().mockResolvedValue([]),
         update: jest.fn(async ({ where, data }) => ({ id: where.id, ...data })),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
         delete: jest.fn().mockResolvedValue({ id: batch1Id }),
       },
       purchase: {
@@ -686,7 +687,7 @@ describe('Suíte Completa de Rotas - Testes de Sucesso (200/201) e Erros (400, 4
         .set('Authorization', `Bearer ${org1Token}`)
         .send({ status: 'PUBLISHED' });
       expectStandardErrorResponse(res, 409);
-      expect(res.body.message).toContain('pelo menos um setor');
+      expect(res.body.message).toContain('Transição');
     });
 
     it('Erro 400: POST /events/:id/banner - Rejeitar upload de arquivo de texto (.txt)', async () => {

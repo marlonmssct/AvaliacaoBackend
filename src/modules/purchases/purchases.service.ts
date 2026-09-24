@@ -78,27 +78,32 @@ export class PurchasesService {
 
     // Transação Atômica: decremento de estoque e emissão dos ingressos
     return this.prisma.$transaction(async (tx) => {
-      // Revalida estoque dentro da transação para prevenir race conditions
-      const currentBatch = await tx.ticketBatch.findUnique({
-        where: { id: dto.ticketBatchId },
+      // O predicado e o decremento ocorrem no mesmo UPDATE. PostgreSQL reavalia
+      // a condição após aguardar outra transação que esteja alterando esta linha.
+      const reserved = await tx.ticketBatch.updateMany({
+        where: {
+          id: dto.ticketBatchId,
+          status: BatchStatus.ACTIVE,
+          availableQuantity: { gte: dto.quantity },
+        },
+        data: { availableQuantity: { decrement: dto.quantity } },
       });
 
-      if (!currentBatch || currentBatch.availableQuantity < dto.quantity) {
+      if (reserved.count !== 1) {
         throw new ConflictException(
           'Conflito de concorrência: os ingressos foram esgotados durante a finalização do seu pedido.',
         );
       }
 
-      const newAvailable = currentBatch.availableQuantity - dto.quantity;
-      const newStatus = newAvailable === 0 ? BatchStatus.SOLD_OUT : currentBatch.status;
-
-      await tx.ticketBatch.update({
+      const currentBatch = await tx.ticketBatch.findUnique({
         where: { id: dto.ticketBatchId },
-        data: {
-          availableQuantity: newAvailable,
-          status: newStatus,
-        },
       });
+      if (currentBatch?.availableQuantity === 0) {
+        await tx.ticketBatch.update({
+          where: { id: dto.ticketBatchId },
+          data: { status: BatchStatus.SOLD_OUT },
+        });
+      }
 
       const purchase = await tx.purchase.create({
         data: {

@@ -11,17 +11,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly usersService: UsersService,
   ) {
     super({
-      jwtFromRequest: (req) => {
-        const authHeader = req?.headers?.authorization || req?.headers?.Authorization;
-        if (typeof authHeader === 'string' && authHeader.trim().length > 0) {
-          return authHeader.replace(/^(Bearer\s+)+/i, '').trim();
-        }
-        return null;
-      },
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey:
-        configService.get<string>('JWT_SECRET') ||
-        'super_secret_jwt_key_event_platform_change_in_production',
+      secretOrKey: configService.getOrThrow<string>('JWT_SECRET'),
     });
   }
 

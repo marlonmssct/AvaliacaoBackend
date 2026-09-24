@@ -20,6 +20,7 @@ import { TicketBatchesService } from './ticket-batches.service';
 import { CreateTicketBatchDto } from './dto/create-ticket-batch.dto';
 import { UpdateTicketBatchDto } from './dto/update-ticket-batch.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
@@ -48,22 +49,30 @@ export class TicketBatchesController {
   }
 
   @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Get('sector/:sectorId')
   @ApiOperation({ summary: 'Listar lotes de um setor' })
   @ApiParam({ name: 'sectorId', description: 'ID numérico do setor' })
   @ApiResponse({ status: 200, description: 'Lista de lotes' })
-  findBySectorId(@Param('sectorId', ParseIntPipe) sectorId: number) {
-    return this.ticketBatchesService.findBySectorId(sectorId);
+  findBySectorId(
+    @Param('sectorId', ParseIntPipe) sectorId: number,
+    @CurrentUser() user?: CurrentUserPayload,
+  ) {
+    return this.ticketBatchesService.findVisibleBySectorId(sectorId, user);
   }
 
   @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Get(':id')
   @ApiOperation({ summary: 'Obter detalhes de um lote' })
   @ApiParam({ name: 'id', description: 'ID numérico do lote' })
   @ApiResponse({ status: 200, description: 'Detalhes do lote' })
   @ApiResponse({ status: 404, description: 'Lote não encontrado' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.ticketBatchesService.findById(id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user?: CurrentUserPayload,
+  ) {
+    return this.ticketBatchesService.findVisibleById(id, user);
   }
 
   @ApiBearerAuth()

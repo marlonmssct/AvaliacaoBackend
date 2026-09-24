@@ -32,9 +32,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
         message = res;
         error = exception.name;
       }
-    } else if (exception instanceof Error) {
-      message = exception.message;
-      error = exception.name;
     }
 
     // Tratamento para conflitos do Prisma (ex: P2002 Unique Constraint) se escaparem
@@ -45,9 +42,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
       error = 'Conflict';
     }
 
+    if ((exception as any)?.code === 'P2003') {
+      status = HttpStatus.CONFLICT;
+      message = 'Este recurso possui registros relacionados e não pode ser excluído.';
+      error = 'Conflict';
+    }
+
     if (status >= 500) {
       this.logger.error(
-        `[${request.method}] ${request.url} - Status ${status} - Error: ${JSON.stringify(message)}`,
+        `[${request.method}] ${request.url} - Status ${status} - Error: ${exception instanceof Error ? exception.message : JSON.stringify(exception)}`,
         exception instanceof Error ? exception.stack : '',
       );
     } else {
