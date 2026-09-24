@@ -3,7 +3,7 @@ import {
   Get,
   Param,
   UseGuards,
-  ParseUUIDPipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -46,12 +46,12 @@ export class TicketsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Obter dados detalhados de um ingresso por ID' })
-  @ApiParam({ name: 'id', description: 'UUID do ingresso' })
+  @ApiParam({ name: 'id', description: 'ID numérico do ingresso' })
   @ApiResponse({ status: 200, description: 'Detalhes do ingresso' })
   @ApiResponse({ status: 403, description: 'Sem permissão' })
   @ApiResponse({ status: 404, description: 'Ingresso não encontrado' })
   findOne(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: CurrentUserPayload,
   ) {
     return this.ticketsService.findById(id, user);

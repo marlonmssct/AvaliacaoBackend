@@ -13,7 +13,7 @@ import { Role } from '../../common/enums/role.enum';
 export class SectorsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createSectorDto: CreateSectorDto, currentUser: { id: string; role: Role }) {
+  async create(createSectorDto: CreateSectorDto, currentUser: { id: number; role: Role }) {
     const event = await this.prisma.event.findUnique({
       where: { id: createSectorDto.eventId },
     });
@@ -39,7 +39,7 @@ export class SectorsService {
     });
   }
 
-  async findByEventId(eventId: string) {
+  async findByEventId(eventId: number) {
     const event = await this.prisma.event.findUnique({ where: { id: eventId } });
     if (!event) {
       throw new NotFoundException(`Evento com ID ${eventId} não encontrado.`);
@@ -52,7 +52,7 @@ export class SectorsService {
     });
   }
 
-  async findById(id: string) {
+  async findById(id: number) {
     const sector = await this.prisma.sector.findUnique({
       where: { id },
       include: {
@@ -69,9 +69,9 @@ export class SectorsService {
   }
 
   async update(
-    id: string,
+    id: number,
     updateSectorDto: UpdateSectorDto,
-    currentUser: { id: string; role: Role },
+    currentUser: { id: number; role: Role },
   ) {
     const sector = await this.findById(id);
 
@@ -104,7 +104,7 @@ export class SectorsService {
     });
   }
 
-  async remove(id: string, currentUser: { id: string; role: Role }) {
+  async remove(id: number, currentUser: { id: number; role: Role }) {
     const sector = await this.findById(id);
 
     if (

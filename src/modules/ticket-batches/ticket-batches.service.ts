@@ -17,7 +17,7 @@ export class TicketBatchesService {
 
   async create(
     dto: CreateTicketBatchDto,
-    currentUser: { id: string; role: Role },
+    currentUser: { id: number; role: Role },
   ) {
     const sector = await this.prisma.sector.findUnique({
       where: { id: dto.sectorId },
@@ -78,7 +78,7 @@ export class TicketBatchesService {
     });
   }
 
-  async findBySectorId(sectorId: string) {
+  async findBySectorId(sectorId: number) {
     const sector = await this.prisma.sector.findUnique({ where: { id: sectorId } });
     if (!sector) {
       throw new NotFoundException(`Setor com ID ${sectorId} não encontrado.`);
@@ -90,7 +90,7 @@ export class TicketBatchesService {
     });
   }
 
-  async findById(id: string) {
+  async findById(id: number) {
     const batch = await this.prisma.ticketBatch.findUnique({
       where: { id },
       include: {
@@ -110,9 +110,9 @@ export class TicketBatchesService {
   }
 
   async update(
-    id: string,
+    id: number,
     dto: UpdateTicketBatchDto,
-    currentUser: { id: string; role: Role },
+    currentUser: { id: number; role: Role },
   ) {
     const batch = await this.findById(id);
 
@@ -145,7 +145,7 @@ export class TicketBatchesService {
     });
   }
 
-  async remove(id: string, currentUser: { id: string; role: Role }) {
+  async remove(id: number, currentUser: { id: number; role: Role }) {
     const batch = await this.findById(id);
 
     if (

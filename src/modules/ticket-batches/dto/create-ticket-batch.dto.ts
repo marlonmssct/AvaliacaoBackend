@@ -6,7 +6,6 @@ import {
   IsNumber,
   IsPositive,
   IsString,
-  IsUUID,
   Min,
 } from 'class-validator';
 
@@ -38,8 +37,8 @@ export class CreateTicketBatchDto {
   @IsNotEmpty({ message: 'A data de fim das vendas é obrigatória' })
   endSaleDate: string;
 
-  @ApiProperty({ example: 'a1b2c3d4-e5f6-7890-1234-56789abcdef0' })
-  @IsUUID(undefined, { message: 'O ID do setor deve ser um UUID válido' })
+  @ApiProperty({ example: 1, description: 'ID numérico do setor' })
+  @IsInt({ message: 'O ID do setor deve ser um número inteiro' })
   @IsNotEmpty({ message: 'O ID do setor é obrigatório' })
-  sectorId: string;
+  sectorId: number;
 }

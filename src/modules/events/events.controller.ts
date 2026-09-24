@@ -7,7 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
-  ParseUUIDPipe,
+  ParseIntPipe,
   UseInterceptors,
   UploadedFile,
   ParseFilePipe,
@@ -72,10 +72,10 @@ export class EventsController {
   @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Obter detalhes de um evento por ID' })
-  @ApiParam({ name: 'id', description: 'UUID do evento' })
+  @ApiParam({ name: 'id', description: 'ID numérico do evento' })
   @ApiResponse({ status: 200, description: 'Detalhes completos do evento e seus setores' })
   @ApiResponse({ status: 404, description: 'Evento não encontrado' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.eventsService.findById(id);
   }
 
@@ -84,13 +84,13 @@ export class EventsController {
   @Roles(Role.ORGANIZER, Role.ADMIN)
   @Patch(':id')
   @ApiOperation({ summary: 'Atualizar dados de um evento (Apenas o organizador dono ou ADMIN)' })
-  @ApiParam({ name: 'id', description: 'UUID do evento' })
+  @ApiParam({ name: 'id', description: 'ID numérico do evento' })
   @ApiResponse({ status: 200, description: 'Evento atualizado' })
   @ApiResponse({ status: 403, description: 'Não autorizado a alterar evento de terceiro' })
   @ApiResponse({ status: 404, description: 'Evento não encontrado' })
   @ApiResponse({ status: 409, description: 'Evento já cancelado ou finalizado' })
   update(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateEventDto: UpdateEventDto,
     @CurrentUser() user: CurrentUserPayload,
   ) {
@@ -102,12 +102,12 @@ export class EventsController {
   @Roles(Role.ORGANIZER, Role.ADMIN)
   @Patch(':id/status')
   @ApiOperation({ summary: 'Alterar status do evento (DRAFT -> PUBLISHED -> CANCELLED/FINISHED)' })
-  @ApiParam({ name: 'id', description: 'UUID do evento' })
+  @ApiParam({ name: 'id', description: 'ID numérico do evento' })
   @ApiResponse({ status: 200, description: 'Status atualizado com sucesso' })
   @ApiResponse({ status: 403, description: 'Não autorizado a gerenciar o evento' })
   @ApiResponse({ status: 409, description: 'Regra violada (ex: publicar sem setor ou reativar cancelado)' })
   updateStatus(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateStatusDto: UpdateEventStatusDto,
     @CurrentUser() user: CurrentUserPayload,
   ) {
@@ -150,7 +150,7 @@ export class EventsController {
   @ApiResponse({ status: 400, description: 'Arquivo inválido (tamanho excedido ou formato incorreto)' })
   @ApiResponse({ status: 403, description: 'Tentativa de alterar evento de terceiro' })
   async uploadBanner(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -178,12 +178,12 @@ export class EventsController {
   @Roles(Role.ORGANIZER, Role.ADMIN)
   @Delete(':id')
   @ApiOperation({ summary: 'Excluir evento (Sem ingressos emitidos)' })
-  @ApiParam({ name: 'id', description: 'UUID do evento' })
+  @ApiParam({ name: 'id', description: 'ID numérico do evento' })
   @ApiResponse({ status: 200, description: 'Evento excluído' })
   @ApiResponse({ status: 403, description: 'Tentativa de excluir evento de terceiro' })
   @ApiResponse({ status: 409, description: 'Evento já possui ingressos e não pode ser excluído' })
   remove(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: CurrentUserPayload,
   ) {
     return this.eventsService.remove(id, user);

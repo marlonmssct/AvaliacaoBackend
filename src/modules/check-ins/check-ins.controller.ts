@@ -5,7 +5,7 @@ import {
   Body,
   Param,
   UseGuards,
-  ParseUUIDPipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -46,11 +46,11 @@ export class CheckInsController {
   @Roles(Role.ORGANIZER, Role.ADMIN)
   @Get('event/:eventId')
   @ApiOperation({ summary: 'Relatório de check-ins realizados no evento' })
-  @ApiParam({ name: 'eventId', description: 'UUID do evento' })
+  @ApiParam({ name: 'eventId', description: 'ID numérico do evento' })
   @ApiResponse({ status: 200, description: 'Histórico de check-ins do evento' })
   @ApiResponse({ status: 403, description: 'Acesso negado a evento de outro organizador' })
   getCheckInsByEvent(
-    @Param('eventId', ParseUUIDPipe) eventId: string,
+    @Param('eventId', ParseIntPipe) eventId: number,
     @CurrentUser() user: CurrentUserPayload,
   ) {
     return this.checkInsService.getCheckInsByEvent(eventId, user);

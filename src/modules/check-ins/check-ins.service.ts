@@ -15,15 +15,18 @@ export class CheckInsService {
 
   async performCheckIn(
     dto: CreateCheckInDto,
-    operator: { id: string; role: Role },
+    operator: { id: number; role: Role },
   ) {
-    // Busca o ingresso por ID (UUID) ou por código único
+    // Busca o ingresso por ID numérico ou por código único
+    const numericId = Number(dto.ticketIdentifier);
+    const orConditions: any[] = [
+      { id: !isNaN(numericId) && Number.isInteger(numericId) ? numericId : -1 },
+      { code: dto.ticketIdentifier },
+    ];
+
     const ticket = await this.prisma.ticket.findFirst({
       where: {
-        OR: [
-          { id: dto.ticketIdentifier },
-          { code: dto.ticketIdentifier },
-        ],
+        OR: orConditions,
       },
       include: {
         batch: {
@@ -124,8 +127,8 @@ export class CheckInsService {
   }
 
   async getCheckInsByEvent(
-    eventId: string,
-    currentUser: { id: string; role: Role },
+    eventId: number,
+    currentUser: { id: number; role: Role },
   ) {
     const event = await this.prisma.event.findUnique({ where: { id: eventId } });
     if (!event) {

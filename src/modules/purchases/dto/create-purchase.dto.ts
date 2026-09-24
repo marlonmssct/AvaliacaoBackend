@@ -4,7 +4,6 @@ import {
   IsInt,
   IsNotEmpty,
   IsPositive,
-  IsUUID,
   Max,
 } from 'class-validator';
 
@@ -15,10 +14,10 @@ export enum PaymentMethodDto {
 }
 
 export class CreatePurchaseDto {
-  @ApiProperty({ example: 'a1b2c3d4-e5f6-7890-1234-56789abcdef0' })
-  @IsUUID(undefined, { message: 'O ID do lote de ingressos deve ser um UUID válido' })
+  @ApiProperty({ example: 1, description: 'ID numérico do lote de ingressos' })
+  @IsInt({ message: 'O ID do lote de ingressos deve ser um número inteiro' })
   @IsNotEmpty({ message: 'O ID do lote é obrigatório' })
-  ticketBatchId: string;
+  ticketBatchId: number;
 
   @ApiProperty({ example: 2, description: 'Quantidade de ingressos a adquirir (entre 1 e 10)' })
   @IsInt({ message: 'A quantidade deve ser um número inteiro' })

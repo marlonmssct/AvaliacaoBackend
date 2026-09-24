@@ -7,7 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
-  ParseUUIDPipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -49,19 +49,19 @@ export class SectorsController {
   @Public()
   @Get('event/:eventId')
   @ApiOperation({ summary: 'Listar setores de um evento' })
-  @ApiParam({ name: 'eventId', description: 'UUID do evento' })
+  @ApiParam({ name: 'eventId', description: 'ID numérico do evento' })
   @ApiResponse({ status: 200, description: 'Lista de setores do evento' })
-  findByEventId(@Param('eventId', ParseUUIDPipe) eventId: string) {
+  findByEventId(@Param('eventId', ParseIntPipe) eventId: number) {
     return this.sectorsService.findByEventId(eventId);
   }
 
   @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Obter detalhes de um setor' })
-  @ApiParam({ name: 'id', description: 'UUID do setor' })
+  @ApiParam({ name: 'id', description: 'ID numérico do setor' })
   @ApiResponse({ status: 200, description: 'Detalhes do setor' })
   @ApiResponse({ status: 404, description: 'Setor não encontrado' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.sectorsService.findById(id);
   }
 
@@ -70,12 +70,12 @@ export class SectorsController {
   @Roles(Role.ORGANIZER, Role.ADMIN)
   @Patch(':id')
   @ApiOperation({ summary: 'Atualizar setor' })
-  @ApiParam({ name: 'id', description: 'UUID do setor' })
+  @ApiParam({ name: 'id', description: 'ID numérico do setor' })
   @ApiResponse({ status: 200, description: 'Setor atualizado' })
   @ApiResponse({ status: 403, description: 'Tentativa de alterar setor de evento de terceiro' })
   @ApiResponse({ status: 409, description: 'Nova capacidade menor que a soma dos lotes já criados' })
   update(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateSectorDto: UpdateSectorDto,
     @CurrentUser() user: CurrentUserPayload,
   ) {
@@ -87,12 +87,12 @@ export class SectorsController {
   @Roles(Role.ORGANIZER, Role.ADMIN)
   @Delete(':id')
   @ApiOperation({ summary: 'Excluir setor' })
-  @ApiParam({ name: 'id', description: 'UUID do setor' })
+  @ApiParam({ name: 'id', description: 'ID numérico do setor' })
   @ApiResponse({ status: 200, description: 'Setor excluído' })
   @ApiResponse({ status: 403, description: 'Tentativa de excluir setor de terceiro' })
   @ApiResponse({ status: 409, description: 'Setor possui ingressos vendidos' })
   remove(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: CurrentUserPayload,
   ) {
     return this.sectorsService.remove(id, user);

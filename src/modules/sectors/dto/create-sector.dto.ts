@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsPositive, IsString, IsUUID } from 'class-validator';
+import { IsInt, IsNotEmpty, IsPositive, IsString } from 'class-validator';
 
 export class CreateSectorDto {
   @ApiProperty({ example: 'Pista Premium' })
@@ -13,8 +13,8 @@ export class CreateSectorDto {
   @IsNotEmpty({ message: 'A capacidade é obrigatória' })
   capacity: number;
 
-  @ApiProperty({ example: 'a1b2c3d4-e5f6-7890-1234-56789abcdef0' })
-  @IsUUID(undefined, { message: 'O ID do evento deve ser um UUID válido' })
+  @ApiProperty({ example: 1, description: 'ID numérico do evento' })
+  @IsInt({ message: 'O ID do evento deve ser um número inteiro' })
   @IsNotEmpty({ message: 'O ID do evento é obrigatório' })
-  eventId: string;
+  eventId: number;
 }

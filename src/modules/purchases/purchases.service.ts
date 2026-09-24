@@ -20,7 +20,7 @@ import {
 export class PurchasesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: CreatePurchaseDto, userId: string) {
+  async create(dto: CreatePurchaseDto, userId: number) {
     const batch = await this.prisma.ticketBatch.findUnique({
       where: { id: dto.ticketBatchId },
       include: {
@@ -135,7 +135,7 @@ export class PurchasesService {
     });
   }
 
-  async findAll(currentUser: { id: string; role: Role }) {
+  async findAll(currentUser: { id: number; role: Role }) {
     // Se for ADMIN, pode listar todas as compras. Se for CUSTOMER/ORGANIZER, apenas as suas
     const where = currentUser.role === Role.ADMIN ? {} : { userId: currentUser.id };
 
@@ -162,7 +162,7 @@ export class PurchasesService {
     });
   }
 
-  async findById(id: string, currentUser: { id: string; role: Role }) {
+  async findById(id: number, currentUser: { id: number; role: Role }) {
     const purchase = await this.prisma.purchase.findUnique({
       where: { id },
       include: {

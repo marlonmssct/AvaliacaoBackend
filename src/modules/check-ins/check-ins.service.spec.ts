@@ -36,7 +36,7 @@ describe('CheckInsService (Regra de Check-In Único e Permissões)', () => {
 
   it('1. Deve validar e realizar check-in com sucesso na primeira tentativa', async () => {
     const ticket = {
-      id: 'tkt-1',
+      id: 1,
       code: 'TKT-VALIDO-01',
       status: TicketStatus.VALID,
       checkIn: null, // Ainda não foi utilizado!
@@ -48,7 +48,7 @@ describe('CheckInsService (Regra de Check-In Único e Permissões)', () => {
           event: {
             title: 'Festival',
             status: EventStatus.PUBLISHED,
-            organizerId: 'org-dono',
+            organizerId: 1,
           },
         },
       },
@@ -56,15 +56,15 @@ describe('CheckInsService (Regra de Check-In Único e Permissões)', () => {
 
     prisma.ticket.findFirst.mockResolvedValue(ticket);
     prisma.checkIn.create.mockResolvedValue({
-      id: 'chk-1',
-      ticketId: 'tkt-1',
-      checkedInByUserId: 'org-dono',
+      id: 1,
+      ticketId: 1,
+      checkedInByUserId: 1,
       checkedInAt: new Date(),
     });
 
     const result = await service.performCheckIn(
       { ticketIdentifier: 'TKT-VALIDO-01', notes: 'Portão 1' },
-      { id: 'org-dono', role: Role.ORGANIZER },
+      { id: 1, role: Role.ORGANIZER },
     );
 
     expect(result.message).toContain('sucesso');
@@ -73,11 +73,11 @@ describe('CheckInsService (Regra de Check-In Único e Permissões)', () => {
 
   it('2. Deve lançar 409 Conflict ao tentar realizar check-in duplicado no mesmo ingresso', async () => {
     const ticketJaUsado = {
-      id: 'tkt-1',
+      id: 1,
       code: 'TKT-USADO-01',
       status: TicketStatus.USED,
       checkIn: {
-        id: 'chk-anterior',
+        id: 1,
         checkedInAt: new Date(),
         checkedInBy: { name: 'Operador Antigo' },
       },
@@ -85,7 +85,7 @@ describe('CheckInsService (Regra de Check-In Único e Permissões)', () => {
       batch: {
         sector: {
           event: {
-            organizerId: 'org-dono',
+            organizerId: 1,
             status: EventStatus.PUBLISHED,
           },
         },
@@ -97,20 +97,20 @@ describe('CheckInsService (Regra de Check-In Único e Permissões)', () => {
     await expect(
       service.performCheckIn(
         { ticketIdentifier: 'TKT-USADO-01' },
-        { id: 'org-dono', role: Role.ORGANIZER },
+        { id: 1, role: Role.ORGANIZER },
       ),
     ).rejects.toThrow(ConflictException);
   });
 
   it('3. Deve lançar 403 Forbidden se organizador tentar realizar check-in em evento de outro organizador', async () => {
     const ticket = {
-      id: 'tkt-1',
+      id: 1,
       code: 'TKT-123',
       status: TicketStatus.VALID,
       batch: {
         sector: {
           event: {
-            organizerId: 'org-outro', // Evento pertence a outro organizador
+            organizerId: 10, // Evento pertence a outro organizador
           },
         },
       },
@@ -121,7 +121,7 @@ describe('CheckInsService (Regra de Check-In Único e Permissões)', () => {
     await expect(
       service.performCheckIn(
         { ticketIdentifier: 'TKT-123' },
-        { id: 'org-invasor', role: Role.ORGANIZER },
+        { id: 99, role: Role.ORGANIZER },
       ),
     ).rejects.toThrow(ForbiddenException);
   });
@@ -132,20 +132,20 @@ describe('CheckInsService (Regra de Check-In Único e Permissões)', () => {
     await expect(
       service.performCheckIn(
         { ticketIdentifier: 'TKT-INEXISTENTE' },
-        { id: 'org-1', role: Role.ORGANIZER },
+        { id: 1, role: Role.ORGANIZER },
       ),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('5. Deve lançar 409 Conflict se o evento estiver cancelado', async () => {
     const ticket = {
-      id: 'tkt-1',
+      id: 1,
       code: 'TKT-123',
       status: TicketStatus.VALID,
       batch: {
         sector: {
           event: {
-            organizerId: 'org-1',
+            organizerId: 1,
             status: EventStatus.CANCELLED, // Cancelado!
           },
         },
@@ -157,7 +157,7 @@ describe('CheckInsService (Regra de Check-In Único e Permissões)', () => {
     await expect(
       service.performCheckIn(
         { ticketIdentifier: 'TKT-123' },
-        { id: 'org-1', role: Role.ORGANIZER },
+        { id: 1, role: Role.ORGANIZER },
       ),
     ).rejects.toThrow(ConflictException);
   });

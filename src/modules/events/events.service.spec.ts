@@ -62,13 +62,13 @@ describe('EventsService (Regras de Domínio e Permissões)', () => {
     };
 
     prisma.event.create.mockResolvedValue({
-      id: 'event-uuid-1',
+      id: 1,
       ...dto,
       status: EventStatus.DRAFT,
-      organizerId: 'org-1',
+      organizerId: 1,
     });
 
-    const result = await service.create(dto, 'org-1');
+    const result = await service.create(dto, 1);
     expect(result.status).toBe(EventStatus.DRAFT);
     expect(prisma.event.create).toHaveBeenCalled();
   });
@@ -85,49 +85,49 @@ describe('EventsService (Regras de Domínio e Permissões)', () => {
       endsAt: '2026-11-01T19:00:00.000Z', // Data anterior!
     };
 
-    await expect(service.create(dto, 'org-1')).rejects.toThrow(BadRequestException);
+    await expect(service.create(dto, 1)).rejects.toThrow(BadRequestException);
   });
 
   it('3. Deve lançar 403 Forbidden ao tentar alterar evento de terceiro', async () => {
     prisma.event.findUnique.mockResolvedValue({
-      id: 'event-uuid-1',
-      organizerId: 'org-dono',
+      id: 1,
+      organizerId: 10,
       status: EventStatus.DRAFT,
     });
 
     await expect(
-      service.update('event-uuid-1', { title: 'Novo Titulo' }, { id: 'org-hacker', role: Role.ORGANIZER }),
+      service.update(1, { title: 'Novo Titulo' }, { id: 99, role: Role.ORGANIZER }),
     ).rejects.toThrow(ForbiddenException);
   });
 
   it('4. Deve lançar 404 quando o evento não existir', async () => {
     prisma.event.findUnique.mockResolvedValue(null);
-    await expect(service.findById('uuid-inexistente')).rejects.toThrow(NotFoundException);
+    await expect(service.findById(999)).rejects.toThrow(NotFoundException);
   });
 
   it('5. Deve lançar 409 Conflict ao tentar publicar evento sem setores ou sem lotes cadastrados', async () => {
     prisma.event.findUnique.mockResolvedValue({
-      id: 'event-1',
-      organizerId: 'org-1',
+      id: 1,
+      organizerId: 1,
       status: EventStatus.DRAFT,
     });
 
     prisma.sector.findMany.mockResolvedValue([]); // Nenhum setor!
 
     await expect(
-      service.updateStatus('event-1', { status: 'PUBLISHED' as any }, { id: 'org-1', role: Role.ORGANIZER }),
+      service.updateStatus(1, { status: 'PUBLISHED' as any }, { id: 1, role: Role.ORGANIZER }),
     ).rejects.toThrow(ConflictException);
   });
 
   it('6. Deve lançar 409 Conflict ao tentar alterar evento já cancelado', async () => {
     prisma.event.findUnique.mockResolvedValue({
-      id: 'event-1',
-      organizerId: 'org-1',
+      id: 1,
+      organizerId: 1,
       status: EventStatus.CANCELLED,
     });
 
     await expect(
-      service.update('event-1', { title: 'Tentativa' }, { id: 'org-1', role: Role.ORGANIZER }),
+      service.update(1, { title: 'Tentativa' }, { id: 1, role: Role.ORGANIZER }),
     ).rejects.toThrow(ConflictException);
   });
 });

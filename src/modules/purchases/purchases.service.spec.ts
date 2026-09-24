@@ -42,7 +42,7 @@ describe('PurchasesService (Regras de Compra, Estoque e Período)', () => {
   it('1. Deve realizar compra com sucesso decrementando estoque e emitindo ingressos', async () => {
     const now = new Date();
     const batch = {
-      id: 'batch-1',
+      id: 1,
       price: 100,
       totalQuantity: 50,
       availableQuantity: 10,
@@ -57,35 +57,35 @@ describe('PurchasesService (Regras de Compra, Estoque e Período)', () => {
     prisma.ticketBatch.findUnique.mockResolvedValue(batch);
     prisma.ticketBatch.update.mockResolvedValue({ ...batch, availableQuantity: 8 });
     prisma.purchase.create.mockResolvedValue({
-      id: 'pur-1',
-      userId: 'user-1',
+      id: 1,
+      userId: 1,
       totalAmount: 200,
       status: PurchaseStatus.PAID,
       paymentMethod: PaymentMethod.PIX,
     });
     prisma.ticket.create.mockResolvedValue({
-      id: 'tkt-1',
+      id: 1,
       code: 'TKT-TEST1',
       status: TicketStatus.VALID,
     });
 
     const result = await service.create(
       {
-        ticketBatchId: 'batch-1',
+        ticketBatchId: 1,
         quantity: 2,
         paymentMethod: PaymentMethodDto.PIX,
       },
-      'user-1',
+      1,
     );
 
-    expect(result.id).toBe('pur-1');
+    expect(result.id).toBe(1);
     expect(result.tickets.length).toBe(2);
   });
 
   it('2. Deve lançar 409 Conflict se o evento não estiver publicado', async () => {
     const now = new Date();
     prisma.ticketBatch.findUnique.mockResolvedValue({
-      id: 'batch-1',
+      id: 1,
       price: 100,
       startSaleDate: new Date(now.getTime() - 1000),
       endSaleDate: new Date(now.getTime() + 1000),
@@ -97,8 +97,8 @@ describe('PurchasesService (Regras de Compra, Estoque e Período)', () => {
 
     await expect(
       service.create(
-        { ticketBatchId: 'batch-1', quantity: 1, paymentMethod: PaymentMethodDto.PIX },
-        'user-1',
+        { ticketBatchId: 1, quantity: 1, paymentMethod: PaymentMethodDto.PIX },
+        1,
       ),
     ).rejects.toThrow(ConflictException);
   });
@@ -107,7 +107,7 @@ describe('PurchasesService (Regras de Compra, Estoque e Período)', () => {
     const now = new Date();
     // Lote expirado
     prisma.ticketBatch.findUnique.mockResolvedValue({
-      id: 'batch-1',
+      id: 1,
       price: 100,
       availableQuantity: 10,
       startSaleDate: new Date(now.getTime() - 20 * 60 * 1000),
@@ -120,8 +120,8 @@ describe('PurchasesService (Regras de Compra, Estoque e Período)', () => {
 
     await expect(
       service.create(
-        { ticketBatchId: 'batch-1', quantity: 1, paymentMethod: PaymentMethodDto.PIX },
-        'user-1',
+        { ticketBatchId: 1, quantity: 1, paymentMethod: PaymentMethodDto.PIX },
+        1,
       ),
     ).rejects.toThrow(ConflictException);
   });
@@ -129,7 +129,7 @@ describe('PurchasesService (Regras de Compra, Estoque e Período)', () => {
   it('4. Deve lançar 409 Conflict se a quantidade solicitada for maior que o saldo do lote', async () => {
     const now = new Date();
     prisma.ticketBatch.findUnique.mockResolvedValue({
-      id: 'batch-1',
+      id: 1,
       price: 100,
       availableQuantity: 2, // Apenas 2 disponíveis
       startSaleDate: new Date(now.getTime() - 1000),
@@ -142,20 +142,20 @@ describe('PurchasesService (Regras de Compra, Estoque e Período)', () => {
 
     await expect(
       service.create(
-        { ticketBatchId: 'batch-1', quantity: 5, paymentMethod: PaymentMethodDto.PIX }, // Solicitou 5!
-        'user-1',
+        { ticketBatchId: 1, quantity: 5, paymentMethod: PaymentMethodDto.PIX }, // Solicitou 5!
+        1,
       ),
     ).rejects.toThrow(ConflictException);
   });
 
   it('5. Deve lançar 403 Forbidden se um usuário tentar visualizar compra de outro', async () => {
     prisma.purchase.findUnique.mockResolvedValue({
-      id: 'pur-1',
-      userId: 'user-dono',
+      id: 1,
+      userId: 10,
     });
 
     await expect(
-      service.findById('pur-1', { id: 'user-curioso', role: Role.CUSTOMER }),
+      service.findById(1, { id: 99, role: Role.CUSTOMER }),
     ).rejects.toThrow(ForbiddenException);
   });
 });

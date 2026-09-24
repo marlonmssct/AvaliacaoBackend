@@ -25,8 +25,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { sub: string; email: string; role: any }) {
-    const user = await this.usersService.findById(payload.sub).catch(() => null);
+  async validate(payload: { sub: number | string; email: string; role: any }) {
+    const user = await this.usersService.findById(Number(payload.sub)).catch(() => null);
     if (!user) {
       throw new UnauthorizedException('Acesso não autorizado.');
     }

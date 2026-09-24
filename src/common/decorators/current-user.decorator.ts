@@ -2,7 +2,7 @@ import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { Role } from '../enums/role.enum';
 
 export interface CurrentUserPayload {
-  id: string;
+  id: number;
   email: string;
   role: Role;
   name?: string;

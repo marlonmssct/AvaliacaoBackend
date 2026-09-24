@@ -40,9 +40,9 @@ describe('TicketBatchesService (Regras de Capacidade e Vendas)', () => {
 
   it('1. Deve criar lote com sucesso respeitando a capacidade máxima do setor', async () => {
     prisma.sector.findUnique.mockResolvedValue({
-      id: 'sec-1',
+      id: 1,
       capacity: 500,
-      event: { organizerId: 'org-1' },
+      event: { organizerId: 1 },
       batches: [{ totalQuantity: 200 }], // 200 já alocados
     });
 
@@ -52,25 +52,25 @@ describe('TicketBatchesService (Regras de Capacidade e Vendas)', () => {
       totalQuantity: 250, // 200 + 250 = 450 <= 500 (Válido!)
       startSaleDate: '2026-10-01T00:00:00.000Z',
       endSaleDate: '2026-11-01T00:00:00.000Z',
-      sectorId: 'sec-1',
+      sectorId: 1,
     };
 
     prisma.ticketBatch.create.mockResolvedValue({
-      id: 'batch-2',
+      id: 2,
       ...dto,
       availableQuantity: 250,
       status: BatchStatus.ACTIVE,
     });
 
-    const result = await service.create(dto, { id: 'org-1', role: Role.ORGANIZER });
-    expect(result.id).toBe('batch-2');
+    const result = await service.create(dto, { id: 1, role: Role.ORGANIZER });
+    expect(result.id).toBe(2);
   });
 
   it('2. Deve lançar 409 Conflict quando a soma das quantidades dos lotes exceder a capacidade do setor', async () => {
     prisma.sector.findUnique.mockResolvedValue({
-      id: 'sec-1',
+      id: 1,
       capacity: 300,
-      event: { organizerId: 'org-1' },
+      event: { organizerId: 1 },
       batches: [{ totalQuantity: 200 }], // 200 já alocados. Restam apenas 100!
     });
 
@@ -80,19 +80,19 @@ describe('TicketBatchesService (Regras de Capacidade e Vendas)', () => {
       totalQuantity: 150, // 200 + 150 = 350 > 300 (Excede!)
       startSaleDate: '2026-10-01T00:00:00.000Z',
       endSaleDate: '2026-11-01T00:00:00.000Z',
-      sectorId: 'sec-1',
+      sectorId: 1,
     };
 
     await expect(
-      service.create(dto, { id: 'org-1', role: Role.ORGANIZER }),
+      service.create(dto, { id: 1, role: Role.ORGANIZER }),
     ).rejects.toThrow(ConflictException);
   });
 
   it('3. Deve lançar 400 Bad Request se a data de fim de venda for anterior à data de início', async () => {
     prisma.sector.findUnique.mockResolvedValue({
-      id: 'sec-1',
+      id: 1,
       capacity: 500,
-      event: { organizerId: 'org-1' },
+      event: { organizerId: 1 },
       batches: [],
     });
 
@@ -102,19 +102,19 @@ describe('TicketBatchesService (Regras de Capacidade e Vendas)', () => {
       totalQuantity: 50,
       startSaleDate: '2026-11-01T00:00:00.000Z',
       endSaleDate: '2026-10-01T00:00:00.000Z', // Anterior!
-      sectorId: 'sec-1',
+      sectorId: 1,
     };
 
     await expect(
-      service.create(dto, { id: 'org-1', role: Role.ORGANIZER }),
+      service.create(dto, { id: 1, role: Role.ORGANIZER }),
     ).rejects.toThrow(BadRequestException);
   });
 
   it('4. Deve lançar 403 Forbidden se organizador tentar criar lote em evento de terceiro', async () => {
     prisma.sector.findUnique.mockResolvedValue({
-      id: 'sec-1',
+      id: 1,
       capacity: 500,
-      event: { organizerId: 'org-dono' },
+      event: { organizerId: 10 },
       batches: [],
     });
 
@@ -124,11 +124,11 @@ describe('TicketBatchesService (Regras de Capacidade e Vendas)', () => {
       totalQuantity: 50,
       startSaleDate: '2026-10-01T00:00:00.000Z',
       endSaleDate: '2026-11-01T00:00:00.000Z',
-      sectorId: 'sec-1',
+      sectorId: 1,
     };
 
     await expect(
-      service.create(dto, { id: 'org-estranho', role: Role.ORGANIZER }),
+      service.create(dto, { id: 99, role: Role.ORGANIZER }),
     ).rejects.toThrow(ForbiddenException);
   });
 });

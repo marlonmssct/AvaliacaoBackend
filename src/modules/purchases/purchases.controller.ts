@@ -5,7 +5,7 @@ import {
   Body,
   Param,
   UseGuards,
-  ParseUUIDPipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -49,12 +49,12 @@ export class PurchasesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Obter detalhes de uma compra' })
-  @ApiParam({ name: 'id', description: 'UUID da compra' })
+  @ApiParam({ name: 'id', description: 'ID numérico da compra' })
   @ApiResponse({ status: 200, description: 'Detalhes da compra' })
   @ApiResponse({ status: 403, description: 'Tentativa de acessar compra de terceiro' })
   @ApiResponse({ status: 404, description: 'Compra não encontrada' })
   findOne(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: CurrentUserPayload,
   ) {
     return this.purchasesService.findById(id, user);

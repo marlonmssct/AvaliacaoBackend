@@ -7,7 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
-  ParseUUIDPipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -60,21 +60,21 @@ export class UsersController {
   @Get(':id')
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Buscar usuário por ID (Apenas ADMIN)' })
-  @ApiParam({ name: 'id', description: 'UUID do usuário' })
+  @ApiParam({ name: 'id', description: 'ID numérico do usuário' })
   @ApiResponse({ status: 200, type: UserResponseDto })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.findById(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Atualizar dados de um usuário (Próprio usuário ou ADMIN)' })
-  @ApiParam({ name: 'id', description: 'UUID do usuário' })
+  @ApiParam({ name: 'id', description: 'ID numérico do usuário' })
   @ApiResponse({ status: 200, type: UserResponseDto })
   @ApiResponse({ status: 403, description: 'Não autorizado a alterar usuário de terceiro' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
   update(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
     @CurrentUser() user: CurrentUserPayload,
   ) {
@@ -83,11 +83,11 @@ export class UsersController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Excluir conta de usuário (Próprio usuário ou ADMIN)' })
-  @ApiParam({ name: 'id', description: 'UUID do usuário' })
+  @ApiParam({ name: 'id', description: 'ID numérico do usuário' })
   @ApiResponse({ status: 200, description: 'Usuário excluído com sucesso' })
   @ApiResponse({ status: 403, description: 'Não autorizado a excluir conta de terceiro' })
   remove(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: CurrentUserPayload,
   ) {
     return this.usersService.remove(id, user);

@@ -20,7 +20,7 @@ export class EventsService {
     private readonly externalService: ExternalService,
   ) {}
 
-  async create(createEventDto: CreateEventDto, organizerId: string) {
+  async create(createEventDto: CreateEventDto, organizerId: number) {
     const startsAt = new Date(createEventDto.startsAt);
     const endsAt = new Date(createEventDto.endsAt);
 
@@ -63,7 +63,7 @@ export class EventsService {
     });
   }
 
-  async findAll(user?: { id: string; role: Role }) {
+  async findAll(user?: { id: number; role: Role }) {
     // Regra: Público ou CUSTOMER vê apenas PUBLISHED.
     // ORGANIZER vê PUBLISHED + seus próprios DRAFTs.
     // ADMIN vê todos.
@@ -116,7 +116,7 @@ export class EventsService {
     });
   }
 
-  async findById(id: string) {
+  async findById(id: number) {
     const event = await this.prisma.event.findUnique({
       where: { id },
       include: {
@@ -139,9 +139,9 @@ export class EventsService {
   }
 
   async update(
-    id: string,
+    id: number,
     updateEventDto: UpdateEventDto,
-    currentUser: { id: string; role: Role },
+    currentUser: { id: number; role: Role },
   ) {
     const event = await this.findById(id);
 
@@ -177,9 +177,9 @@ export class EventsService {
   }
 
   async updateStatus(
-    id: string,
+    id: number,
     updateStatusDto: UpdateEventStatusDto,
-    currentUser: { id: string; role: Role },
+    currentUser: { id: number; role: Role },
   ) {
     const event = await this.findById(id);
 
@@ -227,9 +227,9 @@ export class EventsService {
   }
 
   async updateBanner(
-    id: string,
+    id: number,
     bannerUrl: string,
-    currentUser: { id: string; role: Role },
+    currentUser: { id: number; role: Role },
   ) {
     const event = await this.findById(id);
 
@@ -245,7 +245,7 @@ export class EventsService {
     });
   }
 
-  async remove(id: string, currentUser: { id: string; role: Role }) {
+  async remove(id: number, currentUser: { id: number; role: Role }) {
     const event = await this.findById(id);
 
     if (event.organizerId !== currentUser.id && currentUser.role !== Role.ADMIN) {

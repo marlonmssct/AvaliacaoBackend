@@ -54,7 +54,7 @@ export class UsersService {
     return users.map((u) => this.sanitizeUser(u));
   }
 
-  async findById(id: string): Promise<UserResponseDto> {
+  async findById(id: number): Promise<UserResponseDto> {
     const user = await this.prisma.user.findUnique({
       where: { id },
     });
@@ -73,9 +73,9 @@ export class UsersService {
   }
 
   async update(
-    id: string,
+    id: number,
     updateUserDto: UpdateUserDto,
-    currentUser: { id: string; role: Role },
+    currentUser: { id: number; role: Role },
   ): Promise<UserResponseDto> {
     // Regra de segurança: Usuário só pode alterar o próprio perfil, exceto se for ADMIN
     if (currentUser.id !== id && currentUser.role !== Role.ADMIN) {
@@ -118,7 +118,7 @@ export class UsersService {
     return this.sanitizeUser(updated);
   }
 
-  async remove(id: string, currentUser: { id: string; role: Role }) {
+  async remove(id: number, currentUser: { id: number; role: Role }) {
     if (currentUser.id !== id && currentUser.role !== Role.ADMIN) {
       throw new ForbiddenException(
         'Você não tem permissão para excluir a conta de outro usuário.',

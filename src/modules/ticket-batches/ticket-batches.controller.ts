@@ -7,7 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
-  ParseUUIDPipe,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -50,19 +50,19 @@ export class TicketBatchesController {
   @Public()
   @Get('sector/:sectorId')
   @ApiOperation({ summary: 'Listar lotes de um setor' })
-  @ApiParam({ name: 'sectorId', description: 'UUID do setor' })
+  @ApiParam({ name: 'sectorId', description: 'ID numérico do setor' })
   @ApiResponse({ status: 200, description: 'Lista de lotes' })
-  findBySectorId(@Param('sectorId', ParseUUIDPipe) sectorId: string) {
+  findBySectorId(@Param('sectorId', ParseIntPipe) sectorId: number) {
     return this.ticketBatchesService.findBySectorId(sectorId);
   }
 
   @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Obter detalhes de um lote' })
-  @ApiParam({ name: 'id', description: 'UUID do lote' })
+  @ApiParam({ name: 'id', description: 'ID numérico do lote' })
   @ApiResponse({ status: 200, description: 'Detalhes do lote' })
   @ApiResponse({ status: 404, description: 'Lote não encontrado' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.ticketBatchesService.findById(id);
   }
 
@@ -71,11 +71,11 @@ export class TicketBatchesController {
   @Roles(Role.ORGANIZER, Role.ADMIN)
   @Patch(':id')
   @ApiOperation({ summary: 'Atualizar lote de ingressos' })
-  @ApiParam({ name: 'id', description: 'UUID do lote' })
+  @ApiParam({ name: 'id', description: 'ID numérico do lote' })
   @ApiResponse({ status: 200, description: 'Lote atualizado' })
   @ApiResponse({ status: 403, description: 'Tentativa de alterar lote de terceiro' })
   update(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateTicketBatchDto: UpdateTicketBatchDto,
     @CurrentUser() user: CurrentUserPayload,
   ) {
@@ -87,12 +87,12 @@ export class TicketBatchesController {
   @Roles(Role.ORGANIZER, Role.ADMIN)
   @Delete(':id')
   @ApiOperation({ summary: 'Excluir lote de ingressos (Sem ingressos emitidos)' })
-  @ApiParam({ name: 'id', description: 'UUID do lote' })
+  @ApiParam({ name: 'id', description: 'ID numérico do lote' })
   @ApiResponse({ status: 200, description: 'Lote excluído com sucesso' })
   @ApiResponse({ status: 403, description: 'Tentativa de excluir lote de terceiro' })
   @ApiResponse({ status: 409, description: 'Lote possui ingressos emitidos' })
   remove(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: CurrentUserPayload,
   ) {
     return this.ticketBatchesService.remove(id, user);

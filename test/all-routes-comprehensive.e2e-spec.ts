@@ -26,19 +26,19 @@ describe('Suíte Completa de Rotas - Testes de Sucesso (200/201) e Erros (400, 4
   let customerToken: string;
   let customer2Token: string;
 
-  const adminId = randomUUID();
-  const org1Id = randomUUID();
-  const org2Id = randomUUID();
-  const customerId = randomUUID();
-  const customer2Id = randomUUID();
+  const adminId = 1;
+  const org1Id = 2;
+  const org2Id = 3;
+  const customerId = 4;
+  const customer2Id = 5;
 
-  const event1Id = randomUUID();
-  const sector1Id = randomUUID();
-  const batch1Id = randomUUID();
-  const purchase1Id = randomUUID();
-  const ticket1Id = randomUUID();
-  const ticketUsedId = randomUUID();
-  const batchAlmostSoldOutId = randomUUID();
+  const event1Id = 10;
+  const sector1Id = 20;
+  const batch1Id = 30;
+  const purchase1Id = 40;
+  const ticket1Id = 50;
+  const ticketUsedId = 51;
+  const batchAlmostSoldOutId = 31;
 
   const adminUser = {
     id: adminId,
@@ -103,11 +103,11 @@ describe('Suíte Completa de Rotas - Testes de Sucesso (200/201) e Erros (400, 4
           if (where.id === org2Id) return org2User;
           if (where.id === customerId) return customerUser;
           if (where.id === customer2Id) return customer2User;
-          if (where.email === 'existente@eventos.com') return { id: randomUUID(), email: where.email };
+          if (where.email === 'existente@eventos.com') return { id: 998, email: where.email };
           return null;
         }),
         create: jest.fn(async ({ data }) => ({
-          id: randomUUID(),
+          id: 999,
           ...data,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -271,7 +271,9 @@ describe('Suíte Completa de Rotas - Testes de Sucesso (200/201) e Erros (400, 4
         findMany: jest.fn().mockResolvedValue([]),
         count: jest.fn().mockResolvedValue(0),
         findFirst: jest.fn(async ({ where }) => {
-          const identifier = where?.OR?.[0]?.id || where?.OR?.[1]?.code || where?.code;
+          const codeMatch = where?.OR?.find((c: any) => c.code)?.code || where?.code;
+          const idMatch = where?.OR?.find((c: any) => c.id !== undefined && c.id !== -1)?.id || where?.id;
+          const identifier = codeMatch || idMatch;
           if (identifier === ticketUsedId || identifier === 'TKT-JA-UTILIZADO') {
             return {
               id: ticketUsedId,
@@ -331,7 +333,7 @@ describe('Suíte Completa de Rotas - Testes de Sucesso (200/201) e Erros (400, 4
       },
       checkIn: {
         create: jest.fn(async ({ data }) => ({
-          id: randomUUID(),
+          id: 888,
           ...data,
           checkedInAt: new Date(),
           checkedInBy: org1User,
@@ -521,7 +523,7 @@ describe('Suíte Completa de Rotas - Testes de Sucesso (200/201) e Erros (400, 4
 
     it('Erro 404: GET /users/:id - Usuário inexistente', async () => {
       const res = await request(app.getHttpServer())
-        .get(`/users/${randomUUID()}`)
+        .get('/users/999999')
         .set('x-api-key', validApiKey)
         .set('Authorization', `Bearer ${adminToken}`);
       expectStandardErrorResponse(res, 404);
@@ -595,7 +597,7 @@ describe('Suíte Completa de Rotas - Testes de Sucesso (200/201) e Erros (400, 4
 
     it('Erro 404: GET /events/:id - Evento inexistente', async () => {
       const res = await request(app.getHttpServer())
-        .get(`/events/${randomUUID()}`)
+        .get('/events/999999')
         .set('x-api-key', validApiKey);
       expectStandardErrorResponse(res, 404);
       expect(res.body.message).toContain('não encontrado');
@@ -760,7 +762,7 @@ describe('Suíte Completa de Rotas - Testes de Sucesso (200/201) e Erros (400, 4
 
     it('Erro 404: GET /sectors/:id - Setor inexistente', async () => {
       const res = await request(app.getHttpServer())
-        .get(`/sectors/${randomUUID()}`)
+        .get('/sectors/999999')
         .set('x-api-key', validApiKey);
       expectStandardErrorResponse(res, 404);
       expect(res.body.message).toContain('não encontrado');
@@ -849,7 +851,7 @@ describe('Suíte Completa de Rotas - Testes de Sucesso (200/201) e Erros (400, 4
 
     it('Erro 404: GET /ticket-batches/:id - Lote inexistente', async () => {
       const res = await request(app.getHttpServer())
-        .get(`/ticket-batches/${randomUUID()}`)
+        .get('/ticket-batches/999999')
         .set('x-api-key', validApiKey);
       expectStandardErrorResponse(res, 404);
       expect(res.body.message).toContain('não encontrado');
@@ -947,7 +949,7 @@ describe('Suíte Completa de Rotas - Testes de Sucesso (200/201) e Erros (400, 4
 
     it('Erro 404: GET /purchases/:id - Compra inexistente', async () => {
       const res = await request(app.getHttpServer())
-        .get(`/purchases/${randomUUID()}`)
+        .get('/purchases/999999')
         .set('x-api-key', validApiKey)
         .set('Authorization', `Bearer ${customerToken}`);
       expectStandardErrorResponse(res, 404);

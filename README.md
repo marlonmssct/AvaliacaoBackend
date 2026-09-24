@@ -87,7 +87,7 @@ A plataforma possui três perfis de usuário com restrições explícitas:
 | Realizar Check-in de Ingressos | ❌ | ✅ (Apenas seus eventos) | ✅ (Todos) |
 | Listagem e Gestão Geral de Usuários | ❌ | ❌ | ✅ |
 
-> **Proteção contra IDOR (Insecure Direct Object Reference):** Usuários não podem manipular nem visualizar dados de terceiros alterando identificadores (UUIDs) na URL ou no corpo da requisição. Tentativas disparam `403 Forbidden`.
+> **Proteção contra IDOR (Insecure Direct Object Reference):** Usuários não podem manipular nem visualizar dados de terceiros alterando identificadores numéricos na URL ou no corpo da requisição. Tentativas disparam `403 Forbidden`.
 
 ---
 
@@ -218,9 +218,9 @@ Documentação Swagger interativa: `http://localhost:3000/api/docs`
 |---|---|---|---|---|:---:|:---:|
 | `GET` | `/users/me` | Autenticado | N/A | Dados do próprio perfil | `200 OK` | `401` |
 | `GET` | `/users` | `ADMIN` | N/A | Listar todos os usuários | `200 OK` | `401`, `403` |
-| `GET` | `/users/:id` | `ADMIN` | `:id` (UUID) | Buscar usuário por ID | `200 OK` | `401`, `403`, `404` |
+| `GET` | `/users/:id` | `ADMIN` | `:id` (Int) | Buscar usuário por ID | `200 OK` | `401`, `403`, `404` |
 | `PATCH` | `/users/:id` | Próprio / `ADMIN` | `{ name?, email?, password?, phone? }` | Atualizar dados | `200 OK` | `400`, `401`, `403`, `404` |
-| `DELETE` | `/users/:id` | Próprio / `ADMIN` | `:id` (UUID) | Excluir conta | `200 OK` | `401`, `403`, `404` |
+| `DELETE` | `/users/:id` | Próprio / `ADMIN` | `:id` (Int) | Excluir conta | `200 OK` | `401`, `403`, `404` |
 
 ### 🎪 Eventos (`/events`)
 
@@ -228,31 +228,31 @@ Documentação Swagger interativa: `http://localhost:3000/api/docs`
 |---|---|---|---|---|:---:|:---:|
 | `POST` | `/events` | `ORGANIZER`, `ADMIN` | `{ title, description, locationCep, locationAddress, locationCity, locationState, startsAt, endsAt }` | Criar evento (DRAFT) | `201 Created` | `400`, `401`, `403` |
 | `GET` | `/events` | Pública | N/A | Listar eventos disponíveis | `200 OK` | - |
-| `GET` | `/events/:id` | Pública | `:id` (UUID) | Obter detalhes do evento | `200 OK` | `404` |
+| `GET` | `/events/:id` | Pública | `:id` (Int) | Obter detalhes do evento | `200 OK` | `404` |
 | `PATCH` | `/events/:id` | Dono / `ADMIN` | `{ title?, description?, startsAt?, endsAt?... }` | Atualizar evento | `200 OK` | `400`, `401`, `403`, `404`, `409` |
 | `PATCH` | `/events/:id/status` | Dono / `ADMIN` | `{ status: "PUBLISHED" \| "CANCELLED" \| "FINISHED" }` | Alterar estado | `200 OK` | `400`, `401`, `403`, `404`, `409` |
 | `POST` | `/events/:id/banner` | Dono / `ADMIN` | `multipart/form-data` (`file`) | Upload de banner (JPG/PNG/WEBP até 5MB) | `200 OK` | `400`, `401`, `403`, `404` |
-| `DELETE` | `/events/:id` | Dono / `ADMIN` | `:id` (UUID) | Excluir evento sem ingressos | `200 OK` | `401`, `403`, `404`, `409` |
+| `DELETE` | `/events/:id` | Dono / `ADMIN` | `:id` (Int) | Excluir evento sem ingressos | `200 OK` | `401`, `403`, `404`, `409` |
 
 ### 🏷️ Setores (`/sectors`)
 
 | Método | Endpoint | Permissão | Body / Parâmetros | Descrição | Status Sucesso | Principais Erros |
 |---|---|---|---|---|:---:|:---:|
 | `POST` | `/sectors` | Dono do evento / `ADMIN` | `{ name, capacity, eventId }` | Cadastrar setor | `201 Created` | `400`, `401`, `403`, `404` |
-| `GET` | `/sectors/event/:eventId` | Pública | `:eventId` (UUID) | Setores de um evento | `200 OK` | `404` |
-| `GET` | `/sectors/:id` | Pública | `:id` (UUID) | Detalhes do setor | `200 OK` | `404` |
+| `GET` | `/sectors/event/:eventId` | Pública | `:eventId` (Int) | Setores de um evento | `200 OK` | `404` |
+| `GET` | `/sectors/:id` | Pública | `:id` (Int) | Detalhes do setor | `200 OK` | `404` |
 | `PATCH` | `/sectors/:id` | Dono / `ADMIN` | `{ name?, capacity? }` | Atualizar setor | `200 OK` | `400`, `401`, `403`, `404`, `409` |
-| `DELETE` | `/sectors/:id` | Dono / `ADMIN` | `:id` (UUID) | Excluir setor | `200 OK` | `401`, `403`, `404`, `409` |
+| `DELETE` | `/sectors/:id` | Dono / `ADMIN` | `:id` (Int) | Excluir setor | `200 OK` | `401`, `403`, `404`, `409` |
 
 ### 🎟️ Lotes de Ingressos (`/ticket-batches`)
 
 | Método | Endpoint | Permissão | Body / Parâmetros | Descrição | Status Sucesso | Principais Erros |
 |---|---|---|---|---|:---:|:---:|
 | `POST` | `/ticket-batches` | Dono do evento / `ADMIN` | `{ name, price, totalQuantity, startSaleDate, endSaleDate, sectorId }` | Criar lote | `201 Created` | `400`, `401`, `403`, `404`, `409` |
-| `GET` | `/ticket-batches/sector/:sectorId` | Pública | `:sectorId` (UUID) | Lotes do setor | `200 OK` | `404` |
-| `GET` | `/ticket-batches/:id` | Pública | `:id` (UUID) | Detalhes do lote | `200 OK` | `404` |
+| `GET` | `/ticket-batches/sector/:sectorId` | Pública | `:sectorId` (Int) | Lotes do setor | `200 OK` | `404` |
+| `GET` | `/ticket-batches/:id` | Pública | `:id` (Int) | Detalhes do lote | `200 OK` | `404` |
 | `PATCH` | `/ticket-batches/:id` | Dono / `ADMIN` | `{ name?, price?, startSaleDate?, endSaleDate?, status? }` | Atualizar lote | `200 OK` | `400`, `401`, `403`, `404` |
-| `DELETE` | `/ticket-batches/:id` | Dono / `ADMIN` | `:id` (UUID) | Excluir lote sem vendas | `200 OK` | `401`, `403`, `404`, `409` |
+| `DELETE` | `/ticket-batches/:id` | Dono / `ADMIN` | `:id` (Int) | Excluir lote sem vendas | `200 OK` | `401`, `403`, `404`, `409` |
 
 ### 💳 Compras e Ingressos (`/purchases` e `/tickets`)
 
@@ -260,7 +260,7 @@ Documentação Swagger interativa: `http://localhost:3000/api/docs`
 |---|---|---|---|---|:---:|:---:|
 | `POST` | `/purchases` | Autenticado | `{ ticketBatchId, quantity, paymentMethod }` | Compra atômica | `201 Created` | `400`, `401`, `404`, `409` |
 | `GET` | `/purchases` | Autenticado | N/A | Minhas compras (`ADMIN` vê todas) | `200 OK` | `401` |
-| `GET` | `/purchases/:id` | Próprio / `ADMIN` | `:id` (UUID) | Detalhes da compra | `200 OK` | `401`, `403`, `404` |
+| `GET` | `/purchases/:id` | Próprio / `ADMIN` | `:id` (Int) | Detalhes da compra | `200 OK` | `401`, `403`, `404` |
 | `GET` | `/tickets/my-tickets` | Autenticado | N/A | Meus ingressos emitidos | `200 OK` | `401` |
 | `GET` | `/tickets/code/:code` | Titular / Dono / `ADMIN` | `:code` (ex: `TKT-...`) | Detalhes por código | `200 OK` | `401`, `403`, `404` |
 
@@ -268,8 +268,8 @@ Documentação Swagger interativa: `http://localhost:3000/api/docs`
 
 | Método | Endpoint | Permissão | Body / Parâmetros | Descrição | Status Sucesso | Principais Erros |
 |---|---|---|---|---|:---:|:---:|
-| `POST` | `/check-ins` | Dono do evento / `ADMIN` | `{ ticketIdentifier, notes? }` | Validar entrada única | `201 Created` | `400`, `401`, `403`, `404`, `409` |
-| `GET` | `/check-ins/event/:eventId` | Dono / `ADMIN` | `:eventId` (UUID) | Relatório de entradas | `200 OK` | `401`, `403`, `404` |
+| `POST` | `/check-ins` | Dono do evento / `ADMIN` | `{ ticketIdentifier, notes? }` | Validar entrada única (aceita ID ou código) | `201 Created` | `400`, `401`, `403`, `404`, `409` |
+| `GET` | `/check-ins/event/:eventId` | Dono / `ADMIN` | `:eventId` (Int) | Relatório de entradas | `200 OK` | `401`, `403`, `404` |
 
 ### 🌍 Integrações Externas (`/external`)
 
@@ -324,7 +324,7 @@ curl -X POST http://localhost:3000/events \
 
 ### 4. Upload de Banner do Evento
 ```bash
-curl -X POST http://localhost:3000/events/UUID_DO_EVENTO/banner \
+curl -X POST http://localhost:3000/events/1/banner \
   -H "Authorization: Bearer SEU_TOKEN_JWT" \
   -F "file=@/caminho/para/banner.jpg"
 ```
@@ -335,7 +335,7 @@ curl -X POST http://localhost:3000/purchases \
   -H "Authorization: Bearer SEU_TOKEN_JWT" \
   -H "Content-Type: application/json" \
   -d '{
-    "ticketBatchId": "UUID_DO_LOTE",
+    "ticketBatchId": 1,
     "quantity": 2,
     "paymentMethod": "PIX"
   }'
@@ -347,7 +347,7 @@ curl -X POST http://localhost:3000/check-ins \
   -H "Authorization: Bearer SEU_TOKEN_ORGANIZADOR" \
   -H "Content-Type: application/json" \
   -d '{
-    "ticketIdentifier": "TKT-A1B2C3D4E5F6",
+    "ticketIdentifier": "TKT-DEMO-VIP-001",
     "notes": "Entrada Portão A"
   }'
 ```

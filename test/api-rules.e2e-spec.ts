@@ -20,16 +20,16 @@ describe('Testes E2E Completos (10 Cenários Obrigatórios + API Key)', () => {
 
   const validApiKey = '12345';
 
-  const adminUserId = randomUUID();
-  const orgUserId = randomUUID();
-  const org2UserId = randomUUID();
-  const customerUserId = randomUUID();
+  const adminUserId = 1;
+  const orgUserId = 2;
+  const org2UserId = 3;
+  const customerUserId = 4;
 
-  const testEventId = randomUUID();
-  const testSectorId = randomUUID();
-  const testBatchId = randomUUID();
-  const testPurchaseId = randomUUID();
-  const testTicketId = randomUUID();
+  const testEventId = 10;
+  const testSectorId = 20;
+  const testBatchId = 30;
+  const testPurchaseId = 40;
+  const testTicketId = 50;
 
   const adminUser = {
     id: adminUserId,
@@ -77,7 +77,7 @@ describe('Testes E2E Completos (10 Cenários Obrigatórios + API Key)', () => {
           return null;
         }),
         create: jest.fn(async ({ data }) => ({
-          id: randomUUID(),
+          id: 100,
           ...data,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -210,7 +210,7 @@ describe('Testes E2E Completos (10 Cenários Obrigatórios + API Key)', () => {
       },
       checkIn: {
         create: jest.fn(async ({ data }) => ({
-          id: randomUUID(),
+          id: 200,
           ...data,
           checkedInAt: new Date(),
           checkedInBy: orgUser,
@@ -404,9 +404,9 @@ describe('Testes E2E Completos (10 Cenários Obrigatórios + API Key)', () => {
   });
 
   // Cenário 5: Recurso inexistente → 404
-  it('5. RECURSO INEXISTENTE: Buscar evento por UUID inexistente deve retornar 404 Not Found', async () => {
+  it('5. RECURSO INEXISTENTE: Buscar evento por ID inexistente deve retornar 404 Not Found', async () => {
     const res = await request(app.getHttpServer())
-      .get(`/events/${randomUUID()}`)
+      .get('/events/999999')
       .set('x-api-key', validApiKey);
     expect(res.status).toBe(404);
   });

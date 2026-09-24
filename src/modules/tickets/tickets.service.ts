@@ -10,7 +10,7 @@ import { Role } from '../../common/enums/role.enum';
 export class TicketsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findMyTickets(userId: string) {
+  async findMyTickets(userId: number) {
     return this.prisma.ticket.findMany({
       where: { userId },
       include: {
@@ -29,7 +29,7 @@ export class TicketsService {
     });
   }
 
-  async findById(id: string, currentUser: { id: string; role: Role }) {
+  async findById(id: number, currentUser: { id: number; role: Role }) {
     const ticket = await this.prisma.ticket.findUnique({
       where: { id },
       include: {
@@ -74,7 +74,7 @@ export class TicketsService {
     return ticket;
   }
 
-  async findByCode(code: string, currentUser: { id: string; role: Role }) {
+  async findByCode(code: string, currentUser: { id: number; role: Role }) {
     const ticket = await this.prisma.ticket.findUnique({
       where: { code },
       include: {
