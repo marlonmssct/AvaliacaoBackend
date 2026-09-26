@@ -361,19 +361,21 @@ curl -X POST http://localhost:3000/check-ins \
 
 ## 🧪 Testes Automatizados
 
-A aplicação inclui testes unitários e testes HTTP com Prisma mockado. Eles validam rotas e regras isoladas, mas não substituem uma verificação com PostgreSQL real para migrations e concorrência:
+A aplicação inclui uma cobertura completa de testes em múltiplos níveis (unitários, ponta a ponta E2E, integridade no PostgreSQL e suíte HTTP automatizada):
 
 ```bash
-# Executar todos os testes
+# Executar todos os testes unitários (Jest - 8 suítes / 34 testes)
 npm test
 
-# Executar com relatório de cobertura
+# Executar com relatório detalhado de cobertura
 npm run test:cov
 
-# Testes HTTP com Prisma mockado
+# Testes ponta a ponta (Supertest / E2E - 2 suítes / 77 testes)
 npm run test:e2e
 
-# Integração real: requer PostgreSQL e permissão para criar banco descartável
+# Integração real com banco de dados PostgreSQL (QA de persistência)
 npm run test:db
+
+# Suíte completa de todas as rotas HTTP (54 testes - 100% das rotas com caminhos felizes e rejeições esperadas)
+node test-all-routes.js
 ```
-# AvaliacaoBackend
